@@ -1,6 +1,7 @@
 """
 Database connection module for MongoDB.
 """
+
 from pymongo import MongoClient
 from config import Config
 

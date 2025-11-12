@@ -1,6 +1,7 @@
 """
 Configuration settings for the Flask web application.
 """
+
 import os
 
 
