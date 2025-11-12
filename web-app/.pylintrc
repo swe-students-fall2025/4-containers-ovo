@@ -1,0 +1,5 @@
+[MASTER]
+ignore=tests
+
+[MESSAGES CONTROL]
+disable=missing-docstring,too-few-public-methods,global-statement
