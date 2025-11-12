@@ -13,6 +13,7 @@ coverage = "*"
 [dev-packages]
 pylint = "*"
 black = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.10"

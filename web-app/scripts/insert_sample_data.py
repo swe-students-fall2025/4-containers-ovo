@@ -3,11 +3,13 @@ Script to insert sample classification data for testing.
 This helps visualize the dashboard before ML client is ready.
 """
 
-from pymongo import MongoClient
-from datetime import datetime, timedelta
-import random
 import os
 import sys
+from datetime import datetime, timedelta
+import random
+
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 
 # Add parent directory to path to import config
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -72,7 +74,7 @@ def insert_sample_data(num_samples=20):
     vocal = collection.count_documents({"classification": "vocal"})
     instrumental = collection.count_documents({"classification": "instrumental"})
 
-    print(f"\n📊 Current database stats:")
+    print("\n📊 Current database stats:")
     print(f"   - Total: {total}")
     print(f"   - Vocal: {vocal} ({vocal/total*100:.1f}%)")
     print(f"   - Instrumental: {instrumental} ({instrumental/total*100:.1f}%)")
@@ -95,8 +97,11 @@ if __name__ == "__main__":
 
     try:
         insert_sample_data(args.num)
-    except Exception as e:
-        print(f"❌ Error: {e}")
+    except PyMongoError as e:
+        print(f"❌ MongoDB error: {e}")
         print("\n💡 Make sure MongoDB is running:")
         print("   docker run --name mongodb -d -p 27017:27017 mongo")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user.")
         sys.exit(1)

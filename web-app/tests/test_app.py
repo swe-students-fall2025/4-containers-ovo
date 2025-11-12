@@ -2,10 +2,12 @@
 Unit tests for Flask web application.
 """
 
+from datetime import datetime
+
 import pytest
+
 from app import app
 from database import get_database
-from datetime import datetime
 
 
 @pytest.fixture
@@ -60,6 +62,7 @@ def test_api_results_route(client):
 
 def test_api_stats_route(client, sample_data):
     """Test the API stats route."""
+    # sample_data fixture is used implicitly by inserting data into database
     response = client.get("/api/stats")
     assert response.status_code == 200
     json_data = response.get_json()
