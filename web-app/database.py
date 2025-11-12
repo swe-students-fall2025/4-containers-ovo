@@ -32,4 +32,3 @@ def close_database():
         _client.close()
         _client = None
         _db = None
-
