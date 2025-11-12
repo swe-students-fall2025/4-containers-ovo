@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Classification Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card.vocal {
+            border-top: 4px solid #e74c3c;
+        }
+        .stat-card.instrumental {
+            border-top: 4px solid #3498db;
+        }
+        .stat-card.total {
+            border-top: 4px solid #9b59b6;
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .results-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .results-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .result-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .result-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .result-item.vocal {
+            border-left-color: #e74c3c;
+        }
+        .result-item.instrumental {
+            border-left-color: #3498db;
+        }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .result-filename {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .result-classification {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .result-classification.vocal {
+            background: #e74c3c;
+            color: white;
+        }
+        .result-classification.instrumental {
+            background: #3498db;
+            color: white;
+        }
+        .result-details {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+            width: var(--confidence-width, 0%);
+        }
+        .confidence-fill.vocal {
+            background: #e74c3c;
+        }
+        .confidence-fill.instrumental {
+            background: #3498db;
+        }
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .no-data-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        .timestamp {
+            color: #999;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Music Classification Dashboard</h1>
+            <p class="subtitle">Vocal vs Instrumental Classification Results</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-number">{{ stats.total }}</div>
+                <div class="stat-label">Total Songs</div>
+            </div>
+            <div class="stat-card vocal">
+                <div class="stat-number">{{ stats.vocal }}</div>
+                <div class="stat-label">Vocal</div>
+            </div>
+            <div class="stat-card instrumental">
+                <div class="stat-number">{{ stats.instrumental }}</div>
+                <div class="stat-label">Instrumental</div>
+            </div>
+        </div>
+
+        <!-- Recent Results -->
+        <div class="results-section">
+            <h2>Recent Classifications</h2>
+            
+            {% if results %}
+                {% for result in results %}
+                <div class="result-item {{ result.classification }}">
+                    <div class="result-header">
+                        <div class="result-filename">
+                            {{ result.filename or result.get('filepath', 'Unknown') }}
+                        </div>
+                        <span class="result-classification {{ result.classification }}">
+                            {{ 'Vocal' if result.classification == 'vocal' else 'Instrumental' }}
+                        </span>
+                    </div>
+                    
+                    <div class="result-details">
+                        <span>Confidence: {{ "%.1f"|format(result.confidence * 100) }}%</span>
+                        {% if result.timestamp %}
+                        <span class="timestamp">
+                            {{ result.timestamp.strftime('%Y-%m-%d %H:%M:%S') if result.timestamp is string == False else result.timestamp }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if result.confidence %}
+                    {% set confidence_pct = result.confidence * 100 %}
+                    <div class="confidence-bar">
+                        <div class="confidence-fill {{ result.classification }}" style="--confidence-width: {{ confidence_pct }}%"></div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-data">
+                    <div class="no-data-icon">🎼</div>
+                    <p>No classification results yet.</p>
+                    <p style="margin-top: 10px; font-size: 0.9em;">Waiting for ML client to process music files...</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
