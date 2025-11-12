@@ -14,6 +14,21 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
+    env:
+      MONGO_URI: mongodb://mongodb:27017/
+      MONGO_DB_NAME: test_db
+    
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.adminCommand({ ping: 1 })' >/dev/null 2>&1 || exit 1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=5
+    
     steps:
     - uses: actions/checkout@v3
     
@@ -36,6 +51,19 @@ jobs:
     - name: Run pylint
       working-directory: ./web-app
       run: pipenv run pylint *.py || true
+    
+    - name: Wait for MongoDB
+      run: |
+        echo "Waiting for mongodb to be ready..."
+        for i in {1..30}; do
+          if timeout 1 bash -c "cat < /dev/tcp/mongodb/27017" >/dev/null 2>&1; then
+            echo "mongodb is accepting connections"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "Timed out waiting for mongodb"
+        exit 1
     
     - name: Run pytest with coverage
       working-directory: ./web-app
