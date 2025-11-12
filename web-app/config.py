@@ -17,4 +17,3 @@ class Config:
     # Flask configuration
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
     API_LIMIT = int(os.getenv("API_LIMIT", "100"))
-

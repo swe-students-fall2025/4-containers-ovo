@@ -3,9 +3,11 @@ Flask web application for displaying music classification results.
 Music classification: Vocal (人声) vs Instrumental (纯乐器).
 """
 
-from flask import Flask, render_template, jsonify
-from database import get_database
 from datetime import datetime
+
+from flask import Flask, render_template, jsonify
+
+from database import get_database
 
 app = Flask(__name__)
 app.config.from_object("config.Config")
