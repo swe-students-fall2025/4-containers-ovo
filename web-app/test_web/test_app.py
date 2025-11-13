@@ -45,8 +45,11 @@ def test_index_page_no_results(monkeypatch):
         def __init__(self):
             self.classifications = EmptyCollection()
 
+    def get_empty_db():
+        return EmptyDB()
+
     # Patch get_database() to use an empty DB
-    monkeypatch.setattr(app_module, "get_database", lambda: EmptyDB())
+    monkeypatch.setattr(app_module, "get_database", get_empty_db)
     app_module.app.config["TESTING"] = True
     client = app_module.app.test_client()
 
