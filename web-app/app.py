@@ -1,6 +1,6 @@
 """
 Flask web application for displaying music classification results.
-Music classification: Vocal (人声) vs Instrumental (纯乐器).
+Music classification: Vocal vs Instrumental.
 """
 
 from datetime import datetime

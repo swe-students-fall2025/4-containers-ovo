@@ -211,7 +211,9 @@
                         <span>Confidence: {{ "%.1f"|format(result.confidence * 100) }}%</span>
                         {% if result.timestamp %}
                         <span class="timestamp">
-                            {{ result.timestamp.strftime('%Y-%m-%d %H:%M:%S') if result.timestamp is string == False else result.timestamp }}
+                            {% if result.timestamp %}
+                                {{ result.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                            {% endif %}
                         </span>
                         {% endif %}
                     </div>
