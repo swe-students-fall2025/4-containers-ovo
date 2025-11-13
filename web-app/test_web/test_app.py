@@ -1,4 +1,5 @@
 # tests/test_app.py
+# pylint: disable=import-error
 
 
 def test_index_page_with_results(client):
@@ -24,20 +25,20 @@ def test_index_page_with_results(client):
 
 def test_index_page_no_results(monkeypatch):
     """The index page should show an empty-state message when the DB has no results."""
-    import app as app_module
+    import app as app_module  # pylint: disable=import-outside-toplevel
 
     class EmptyCursor:
-        def sort(self, *args, **kwargs):
+        def sort(self, *_args, **_kwargs):
             return self
 
-        def limit(self, n):
+        def limit(self, _n):
             return []
 
     class EmptyCollection:
-        def find(self, *args, **kwargs):
+        def find(self, *_args, **_kwargs):
             return EmptyCursor()
 
-        def count_documents(self, filter_):
+        def count_documents(self, _filter):
             return 0
 
     class EmptyDB:
@@ -69,7 +70,7 @@ def test_api_results(client):
     assert isinstance(first["_id"], str)
     assert "classification" in first
     assert "confidence" in first
-    assert "timestamp" in first 
+    assert "timestamp" in first
 
 
 def test_api_stats(client):

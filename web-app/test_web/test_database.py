@@ -1,4 +1,5 @@
 # tests/test_database.py
+# pylint: disable=import-error
 
 import types
 
