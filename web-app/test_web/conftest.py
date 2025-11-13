@@ -17,6 +17,7 @@ import app as app_module  # pylint: disable=wrong-import-position,import-error
 
 class FakeCursor:
     """A simple cursor object that mimics PyMongo's chained sort().limit()."""
+
     def __init__(self, docs):
         self._docs = docs
 
@@ -29,6 +30,7 @@ class FakeCursor:
 
 class FakeCollection:
     """Fake MongoDB collection for testing without a real database."""
+
     def __init__(self, docs):
         self._docs = docs
 
@@ -45,6 +47,7 @@ class FakeCollection:
 
 class FakeDB:
     """Fake database object holding a single fake collection."""
+
     def __init__(self, docs):
         self.classifications = FakeCollection(docs)
 
@@ -52,6 +55,7 @@ class FakeDB:
 @pytest.fixture
 def sample_docs():
     """Basic sample classification results used across multiple tests."""
+
     return [
         {
             "_id": "1",
@@ -73,12 +77,14 @@ def sample_docs():
 @pytest.fixture
 def fake_db(sample_docs):  # pylint: disable=redefined-outer-name
     """Return FakeDB instance populated with sample documents."""
+
     return FakeDB(sample_docs)
 
 
 @pytest.fixture
 def app(fake_db, monkeypatch):  # pylint: disable=redefined-outer-name
     """Patch get_database() so the Flask app uses our fake DB instead of Mongo."""
+
     monkeypatch.setattr(app_module, "get_database", lambda: fake_db)
 
     app_module.app.config["TESTING"] = True
@@ -88,4 +94,5 @@ def app(fake_db, monkeypatch):  # pylint: disable=redefined-outer-name
 @pytest.fixture
 def client(app):  # pylint: disable=redefined-outer-name
     """Flask test client."""
+
     return app.test_client()
