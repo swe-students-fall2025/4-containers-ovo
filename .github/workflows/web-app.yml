@@ -2,9 +2,11 @@ name: Web App CI
 
 on:
   push:
+    branches: [ main ]
     paths:
       - "web-app/**"
   pull_request:
+    branches: [ main ]
     paths:
       - "web-app/**"
 
@@ -14,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -30,4 +32,4 @@ jobs:
 
       - name: Run tests with coverage
         working-directory: web-app
-        run: pipenv run pytest
+        run: pipenv run pytest --cov=. --cov-report=term-missing --cov-fail-under=80
