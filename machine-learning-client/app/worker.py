@@ -4,20 +4,29 @@ Background worker for the ML client.
 
 Reads one pending audio classification task from MongoDB, loads the
 corresponding audio bytes from GridFS, extracts features, and classifies
-the track as either "vocal" or "electronic" using reference fingerprints.
+the track as either "Rock" or "Hip-Hop" using a trained scikit-learn model.
 """
 
 # pylint: disable=import-error,import-outside-toplevel,invalid-name
 
 import os
 import time
-from typing import Iterable, Tuple, Any
+from typing import Tuple, Any
 
 import numpy as np
 from gridfs import GridFS
 from pymongo import MongoClient
+import joblib
 
-from app.features import extract_features
+from app.features import extract_features_audio
+
+
+# Load trained model + scaler at module import time
+MODEL_PATH = "/app/data/fma_metadata/model_rock_hiphop.joblib"
+SCALER_PATH = "/app/data/fma_metadata/scaler_rock_hiphop.joblib"
+
+model = joblib.load(MODEL_PATH)
+scaler = joblib.load(SCALER_PATH)
 
 
 def _read_gridfs_audio(gridfs_bucket: GridFS, gridfs_id: Any) -> Tuple[np.ndarray, int]:
@@ -36,41 +45,6 @@ def _read_gridfs_audio(gridfs_bucket: GridFS, gridfs_id: Any) -> Tuple[np.ndarra
     return audio, sample_rate
 
 
-def _predict_binary_genre(
-    feature_vector: np.ndarray, references: Iterable[dict]
-) -> str:
-    """Binary ('vocal'/'electronic') prediction using cosine similarity."""
-    ref_fps: list[np.ndarray] = []
-    labels: list[str] = []
-
-    for doc in references:
-        fp = np.asarray(doc.get("fp", []), dtype=float)
-        if fp.size == 0:
-            continue
-
-        norm = np.linalg.norm(fp)
-        if norm == 0:
-            continue
-
-        ref_fps.append(fp / norm)
-        labels.append(str(doc.get("genre", "")).lower())
-
-    if not ref_fps:
-        return "vocal"
-
-    ref_matrix = np.vstack(ref_fps)
-    best_index = int(np.argmax(ref_matrix @ feature_vector))
-    raw_label = labels[best_index]
-
-    if any(x in raw_label for x in ["vocal", "voice", "singer"]):
-        return "vocal"
-
-    if any(x in raw_label for x in ["electronic", "edm", "electro"]):
-        return "electronic"
-
-    return "vocal"
-
-
 def process_one(db, gridfs_bucket: GridFS) -> bool:
     """Process a single pending classification task."""
     task = db.tasks.find_one_and_update(
@@ -82,12 +56,19 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
         return False
 
     try:
+        # GridFS read audio
         audio, sample_rate = _read_gridfs_audio(gridfs_bucket, task["gridfs_id"])
-        feature_vector = extract_features(audio, sample_rate)
 
-        references = db.reference_tracks.find()
-        predicted_genre = _predict_binary_genre(feature_vector, references)
+        # extract vector
+        feature_vector = extract_features_audio(audio, sample_rate).reshape(1, -1)
 
+        # normalize
+        feature_vector_scaled = scaler.transform(feature_vector)
+
+        # model predict
+        predicted_genre = model.predict(feature_vector_scaled)[0]
+
+        # result update
         db.results.insert_one(
             {
                 "task_id": task["_id"],
@@ -135,3 +116,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
