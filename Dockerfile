@@ -9,7 +9,7 @@ USER appuser
 
 WORKDIR /app
 
-COPY --chown=appuser:appuser requirements.txt .
+COPY .github/workflows/requirements.txt ./requirements.txt
 RUN python -m pip install --upgrade pip && pip install -r requirements.txt
 
 COPY --chown=appuser:appuser web-app/ web-app/
