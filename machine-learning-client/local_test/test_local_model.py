@@ -1,14 +1,15 @@
+# pylint: disable=import-error
 """Quick local tests for the trained rock-vs-hiphop model."""
 # test_local_model.py
-
-from app.features import extract_features_audio
 
 import sys
 from pathlib import Path
 
-import numpy as np
 import joblib
+import numpy as np
 import soundfile as sf
+
+from app.features import extract_features_audio
 
 # -----------------------------------------------------------
 # machine-learning-client/local_test
@@ -32,6 +33,7 @@ def load_audio_mono(path: Path) -> tuple[np.ndarray, int]:
 
 
 def main() -> None:
+    """Run local tests for the trained rock vs. hip-hop model."""
 
     audio_path = BASE / "test_audio_hiphop.wav"
 
@@ -81,4 +83,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

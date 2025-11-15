@@ -27,7 +27,7 @@ def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
         return 0.0
     return float(np.dot(a, b) / denom)
 
-
+# pylint: disable=too-many-locals
 def extract_features_audio(y, sr):
 
     """Extract audio features from a WAV file for the rock vs. hip-hop model.
@@ -80,4 +80,3 @@ def extract_features_audio(y, sr):
     )
 
     return vec
-
