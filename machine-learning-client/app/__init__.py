@@ -1,4 +1,5 @@
 """ML Client package"""
+
 # pylint: disable=import-error
 from .features import extract_features, cosine_sim
 from . import worker

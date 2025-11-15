@@ -27,9 +27,9 @@ def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
         return 0.0
     return float(np.dot(a, b) / denom)
 
+
 # pylint: disable=too-many-locals
 def extract_features_audio(y, sr):
-
     """Extract audio features from a WAV file for the rock vs. hip-hop model.
 
     Parameters
@@ -44,15 +44,12 @@ def extract_features_audio(y, sr):
         into the trained classifier.
     """
 
-
-
     rms = librosa.feature.rms(y=y).mean()
     centroid = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
     bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
     zcr = librosa.feature.zero_crossing_rate(y=y).mean()
     tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
     flatness = librosa.feature.spectral_flatness(y=y).mean()
-
 
     acousticness = float(1.0 - flatness)
     danceability = float(1.0 - zcr)
@@ -61,9 +58,7 @@ def extract_features_audio(y, sr):
     liveness = float(centroid)
     speechiness = float(zcr)
     tempo_feat = float(tempo)
-    valence = float(
-        centroid / (centroid + bandwidth + 1e-6)
-    )
+    valence = float(centroid / (centroid + bandwidth + 1e-6))
 
     vec = np.array(
         [
