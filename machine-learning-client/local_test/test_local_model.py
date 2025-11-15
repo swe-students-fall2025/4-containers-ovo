@@ -1,4 +1,7 @@
+"""Quick local tests for the trained rock-vs-hiphop model."""
 # test_local_model.py
+
+from app.features import extract_features_audio
 
 import sys
 from pathlib import Path
@@ -17,12 +20,10 @@ PROJECT_ROOT = BASE.parent                    # machine-learning-client/
 sys.path.append(str(PROJECT_ROOT))
 
 
-from app.features import extract_features_audio   # noqa: E402
-
-
-
 def load_audio_mono(path: Path) -> tuple[np.ndarray, int]:
-    
+
+    """load audio vector"""
+
     audio, sr = sf.read(path, dtype="float32")
     if audio.ndim > 1:
         audio = audio.mean(axis=1)
@@ -31,7 +32,7 @@ def load_audio_mono(path: Path) -> tuple[np.ndarray, int]:
 
 
 def main() -> None:
-    
+
     audio_path = BASE / "test_audio_hiphop.wav"
 
     if not audio_path.exists():
@@ -39,7 +40,7 @@ def main() -> None:
 
     print(f"USE TEST AUDIO: {audio_path}")
 
-    
+
     scaler_path = PROJECT_ROOT / "data" / "fma_metadata" / "scaler_rock_hiphop.joblib"
     model_path  = PROJECT_ROOT / "data" / "fma_metadata" / "model_rock_hiphop.joblib"
 
@@ -53,7 +54,7 @@ def main() -> None:
 
     print("LOAD scaler AND model SUCESSFULLY")
 
-    
+
     audio, sr = load_audio_mono(audio_path)
 
     feat = extract_features_audio(audio, sr)    # shape: (8,)
@@ -61,10 +62,10 @@ def main() -> None:
 
     print("ORIGINAL FEATURE VECTORS:", feat)
 
-    
+
     feat_scaled = scaler.transform(feat)
 
-    
+
     pred = model.predict(feat_scaled)[0]
     proba = None
     if hasattr(model, "predict_proba"):
