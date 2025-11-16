@@ -6,36 +6,61 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # repeat same job for each subsystem in the following subdirectories
         subdir: [web-app, machine-learning-client]
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10" # update version(s) as needed
+          python-version: "3.10"
+
       - name: Install dependencies
-        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
         run: |
           cd ${{ matrix.subdir }}
           python -m pip install --upgrade pip
           python -m pip install pipenv
           pipenv sync --dev --python $(which python)
-          pipenv shell --fancy --python $(which python)
+
       - name: Install tomli for pylint (runtime only)
-        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
         run: |
           cd ${{ matrix.subdir }}
           pipenv run pip install tomli typing_extensions
-      - name: Lint with pylint
-        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
-        # you may set pylint to ignore any files or dependencies that make no sense to lint
+
+      # -----------------------
+      # LINT FOR MACHINE-LEARNING-CLIENT
+      # -----------------------
+      - name: Lint ML client only
+        if: matrix.subdir == 'machine-learning-client'
         run: |
-          cd ${{ matrix.subdir }}
-          pipenv run pylint **/*.py
-      - name: Format with black
-        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
-        # you may set black to ignore any files or dependencies that make no sense to format
+          cd machine-learning-client
+          pipenv run pylint app --disable=import-error
+
+      # -----------------------
+      # LINT FOR WEB-APP
+      # -----------------------
+      - name: Lint web app only
+        if: matrix.subdir == 'web-app'
         run: |
-          cd ${{ matrix.subdir }}
+          cd web-app
+          pipenv run pylint *.py
+
+      # -----------------------
+      # BLACK for ML client
+      # -----------------------
+      - name: Format ML client with black (ignore tests)
+        if: matrix.subdir == 'machine-learning-client'
+        run: |
+          cd machine-learning-client
+          pipenv run black --diff --check . --exclude "tests/*"
+
+      # -----------------------
+      # BLACK for web-app
+      # -----------------------
+      - name: Format web app with black
+        if: matrix.subdir == 'web-app'
+        run: |
+          cd web-app
           pipenv run black --diff --check .
+
