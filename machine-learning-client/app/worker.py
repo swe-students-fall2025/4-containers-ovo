@@ -112,7 +112,9 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
             {"_id": task_file["_id"]},
             {"$set": {"status": "done", "predicted_genre": predicted_genre}},
         )
-        logger.info("Processed file %s => %s", task_file.get("filename"), predicted_genre)
+        logger.info(
+            "Processed file %s => %s", task_file.get("filename"), predicted_genre
+        )
         return True
 
     except Exception as exc:  # pylint: disable=broad-except
@@ -187,7 +189,9 @@ def main() -> None:
             process_loop(database, gridfs_bucket, poll_interval, stop_event)
 
         except (AutoReconnect, ServerSelectionTimeoutError, PyMongoError) as exc:
-            logger.warning("MongoDB connection issue: %s. Retrying in %.1fs", exc, backoff_seconds)
+            logger.warning(
+                "MongoDB connection issue: %s. Retrying in %.1fs", exc, backoff_seconds
+            )
             time.sleep(backoff_seconds)
             backoff_seconds = min(backoff_seconds * 2.0, 10.0)
             client = None

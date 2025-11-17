@@ -10,6 +10,7 @@ Run:
 
 Each immediate subfolder name is used as the label.
 """
+
 # pylint: disable=duplicate-code
 
 from __future__ import annotations
@@ -74,12 +75,21 @@ def process_parent(
     """
 
     header = [
-        "acousticness", "danceability", "energy", "instrumentalness",
-        "liveness", "speechiness", "tempo", "valence", "label", "filename",
+        "acousticness",
+        "danceability",
+        "energy",
+        "instrumentalness",
+        "liveness",
+        "speechiness",
+        "tempo",
+        "valence",
+        "label",
+        "filename",
     ]
 
     subfolders = [
-        d for d in sorted(os.listdir(parent_dir))
+        d
+        for d in sorted(os.listdir(parent_dir))
         if os.path.isdir(os.path.join(parent_dir, d))
     ]
     if not subfolders:

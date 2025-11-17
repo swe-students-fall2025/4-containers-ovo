@@ -10,6 +10,7 @@ Dependencies:
 
 Note: librosa may require `ffmpeg` / `libsndfile` for MP3 support on some systems.
 """
+
 # pylint: disable=duplicate-code
 
 from __future__ import annotations
@@ -46,8 +47,16 @@ def process_folder(
     import librosa  # pylint: disable=import-outside-toplevel
 
     header = [
-        "acousticness", "danceability", "energy", "instrumentalness",
-        "liveness", "speechiness", "tempo", "valence", "label", "filename",
+        "acousticness",
+        "danceability",
+        "energy",
+        "instrumentalness",
+        "liveness",
+        "speechiness",
+        "tempo",
+        "valence",
+        "label",
+        "filename",
     ]
 
     with open(output_csv, "w", newline="", encoding="utf-8") as fh:
@@ -79,9 +88,7 @@ def build_argparser() -> argparse.ArgumentParser:
         help="Folder containing audio files (MP3/WAV/FLAC)",
     )
     p.add_argument("--output", required=True, help="Destination CSV file path")
-    p.add_argument(
-        "--label", default="hiphop", help="Label to write for every row"
-    )
+    p.add_argument("--label", default="hiphop", help="Label to write for every row")
     p.add_argument(
         "--sr", type=int, default=None, help="Resample rate (None keeps original)"
     )

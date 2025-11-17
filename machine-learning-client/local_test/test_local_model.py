@@ -53,7 +53,7 @@ def main() -> None:
     le = joblib.load(le_path)
 
     print("\n====== MODEL INFO ======")
-    if hasattr(pipeline, 'named_steps'):
+    if hasattr(pipeline, "named_steps"):
         print("PIPELINE STEPS:", list(pipeline.named_steps.keys()))
     print("LABEL ENCODER CLASSES:", le.classes_)
     print("LOAD model SUCCESSFULLY")
@@ -77,9 +77,9 @@ def main() -> None:
     print(f"PREDICTED CLASS (label): {pred_label}")
 
     # Get probabilities from the RandomForest step
-    rf_model = pipeline.named_steps.get('randomforestclassifier')
+    rf_model = pipeline.named_steps.get("randomforestclassifier")
     if rf_model is not None:
-        scaler = pipeline.named_steps.get('standardscaler')
+        scaler = pipeline.named_steps.get("standardscaler")
         print_probabilities(rf_model, scaler, feat_batch, le)
 
     print("\n====== TEST COMPLETE ======")
