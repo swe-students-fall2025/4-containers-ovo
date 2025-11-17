@@ -10,6 +10,7 @@ Dependencies:
 
 Note: librosa may require `ffmpeg` / `libsndfile` for MP3 support on some systems.
 """
+# pylint: disable=duplicate-code
 
 from __future__ import annotations
 
@@ -18,38 +19,42 @@ import csv
 import os
 from typing import Iterable
 
-import librosa
-import numpy as np
-
 from .features import extract_features_audio
 
 
 def iter_audio_files(path: str, exts: Iterable[str] = (".mp3", ".wav", ".flac")):
+    """Yield audio file paths under ``path`` matching any extension in ``exts``."""
     for root, _, files in os.walk(path):
         for fname in files:
             if any(fname.lower().endswith(ext) for ext in exts):
                 yield os.path.join(root, fname)
 
 
-def process_folder(input_dir: str, output_csv: str, label: str = "hiphop", sr: int | None = None):
+def process_folder(
+    input_dir: str,
+    output_csv: str,
+    label: str = "hiphop",
+    sr: int | None = None,
+) -> None:
+    """Extract features for all audio files in ``input_dir`` and write CSV.
+
+    The CSV will contain the same header as used by the training notebook and
+    app tooling; each row includes the features, label, and filename.
+    """
+
+    # Import librosa at runtime to avoid import-error from static analyzers
+    import librosa  # pylint: disable=import-outside-toplevel
+
     header = [
-        "acousticness",
-        "danceability",
-        "energy",
-        "instrumentalness",
-        "liveness",
-        "speechiness",
-        "tempo",
-        "valence",
-        "label",
-        "filename",
+        "acousticness", "danceability", "energy", "instrumentalness",
+        "liveness", "speechiness", "tempo", "valence", "label", "filename",
     ]
 
-    total = 0
     with open(output_csv, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(header)
 
+        total = 0
         for path in iter_audio_files(input_dir):
             total += 1
             try:
@@ -59,18 +64,27 @@ def process_folder(input_dir: str, output_csv: str, label: str = "hiphop", sr: i
                 row.append(label)
                 row.append(os.path.basename(path))
                 writer.writerow(row)
-            except Exception as exc:  # keep going on single-file failures
+            except Exception as exc:  # pylint: disable=broad-except
                 print(f"Warning: failed to process '{path}': {exc}")
 
     print(f"Wrote features for ~{total} files to {output_csv}")
 
 
 def build_argparser() -> argparse.ArgumentParser:
+    """Return an ArgumentParser for the extract_features CLI."""
     p = argparse.ArgumentParser(description="Extract audio features to CSV")
-    p.add_argument("--input-dir", required=True, help="Folder containing audio files (MP3/WAV/FLAC)")
+    p.add_argument(
+        "--input-dir",
+        required=True,
+        help="Folder containing audio files (MP3/WAV/FLAC)",
+    )
     p.add_argument("--output", required=True, help="Destination CSV file path")
-    p.add_argument("--label", default="hiphop", help="Label to write for every row")
-    p.add_argument("--sr", type=int, default=None, help="Resample rate (None keeps original)")
+    p.add_argument(
+        "--label", default="hiphop", help="Label to write for every row"
+    )
+    p.add_argument(
+        "--sr", type=int, default=None, help="Resample rate (None keeps original)"
+    )
     return p
 
 

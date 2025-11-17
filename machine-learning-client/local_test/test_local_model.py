@@ -1,4 +1,4 @@
-# test_local_model.py
+"""Local test harness for the saved rock-vs-hiphop pipeline."""
 
 import sys
 from pathlib import Path
@@ -7,20 +7,17 @@ import numpy as np
 import joblib
 import soundfile as sf
 
-# -----------------------------------------------------------
-# machine-learning-client/local_test
-# -----------------------------------------------------------
+# Set up sys.path before importing app package so it can be found
 BASE = Path(__file__).resolve().parent  # local_test/
 PROJECT_ROOT = BASE.parent  # machine-learning-client/
+sys.path.insert(0, str(PROJECT_ROOT))
 
-
-sys.path.append(str(PROJECT_ROOT))
-
-
-from app.features import extract_features_audio  # noqa: E402
+# pylint: disable=wrong-import-position
+from app.features import extract_features_audio
 
 
 def load_audio_mono(path: Path) -> tuple[np.ndarray, int]:
+    """Load an audio file as mono float32 and return (audio, sample_rate)."""
 
     audio, sr = sf.read(path, dtype="float32")
     if audio.ndim > 1:
@@ -29,6 +26,10 @@ def load_audio_mono(path: Path) -> tuple[np.ndarray, int]:
 
 
 def main() -> None:
+    """Load the saved pipeline and a test audio file, then run inference.
+
+    This prints model info, extracted features, predicted label and probabilities.
+    """
 
     audio_path = BASE / "hip.wav"
 
@@ -79,13 +80,18 @@ def main() -> None:
     rf_model = pipeline.named_steps.get('randomforestclassifier')
     if rf_model is not None:
         scaler = pipeline.named_steps.get('standardscaler')
-        feat_scaled = scaler.transform(feat_batch)
-        proba = rf_model.predict_proba(feat_scaled)[0]
-        print("\nPREDICT PROBABILITIES:")
-        for i, class_name in enumerate(le.classes_):
-            print(f"  {class_name}: {proba[i]:.4f}")
+        print_probabilities(rf_model, scaler, feat_batch, le)
 
     print("\n====== TEST COMPLETE ======")
+
+
+def print_probabilities(rf_model, scaler, feat_batch, le) -> None:
+    """Scale features and print probability per class from RF model."""
+    feat_scaled = scaler.transform(feat_batch)
+    proba = rf_model.predict_proba(feat_scaled)[0]
+    print("\nPREDICT PROBABILITIES:")
+    for i, class_name in enumerate(le.classes_):
+        print(f"  {class_name}: {proba[i]:.4f}")
 
 
 if __name__ == "__main__":

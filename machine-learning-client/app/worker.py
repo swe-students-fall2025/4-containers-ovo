@@ -28,7 +28,7 @@ import joblib
 try:
     # Prefer package-style import when executed as module: `python -m app.worker`
     from app.features import extract_features_audio
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     # Fallback if executed directly: `python app/worker.py`
     from features import extract_features_audio
 
@@ -203,4 +203,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
