@@ -12,7 +12,7 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #c4c1d6 0%, #d5c9d1 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -36,6 +36,105 @@
             color: #666;
             font-size: 1.1em;
         }
+        .action-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .action-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #9a9fb3;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #8a8fa0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .btn-danger {
+            background: #b8a5a0;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #a89590;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #b5b8a8;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #a5a898;
+        }
+        .recording-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8e3d8;
+            border-radius: 8px;
+            border-left: 4px solid #c9b8a8;
+        }
+        .recording-indicator.active {
+            display: flex;
+        }
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background: #b8a5a0;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+        .upload-section {
+            margin-top: 15px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -49,14 +148,14 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             text-align: center;
         }
-        .stat-card.vocal {
-            border-top: 4px solid #e74c3c;
+        .stat-card.rock {
+            border-top: 4px solid #c4a89f;
         }
-        .stat-card.instrumental {
-            border-top: 4px solid #3498db;
+        .stat-card.hiphop {
+            border-top: 4px solid #9a9fb3;
         }
         .stat-card.total {
-            border-top: 4px solid #9b59b6;
+            border-top: 4px solid #b5b8a8;
         }
         .stat-number {
             font-size: 2.5em;
@@ -93,11 +192,14 @@
             transform: translateX(5px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .result-item.vocal {
-            border-left-color: #e74c3c;
+        .result-item.rock {
+            border-left-color: #c4a89f;
         }
-        .result-item.instrumental {
-            border-left-color: #3498db;
+        .result-item.hiphop {
+            border-left-color: #9a9fb3;
+        }
+        .result-item.pending {
+            border-left-color: #c9b8a8;
         }
         .result-header {
             display: flex;
@@ -118,12 +220,16 @@
             font-weight: bold;
             text-transform: uppercase;
         }
-        .result-classification.vocal {
-            background: #e74c3c;
+        .result-classification.rock {
+            background: #c4a89f;
             color: white;
         }
-        .result-classification.instrumental {
-            background: #3498db;
+        .result-classification.hiphop {
+            background: #9a9fb3;
+            color: white;
+        }
+        .result-classification.pending {
+            background: #c9b8a8;
             color: white;
         }
         .result-details {
@@ -147,11 +253,11 @@
             transition: width 0.3s;
             width: var(--confidence-width, 0%);
         }
-        .confidence-fill.vocal {
-            background: #e74c3c;
+        .confidence-fill.rock {
+            background: #c4a89f;
         }
-        .confidence-fill.instrumental {
-            background: #3498db;
+        .confidence-fill.hiphop {
+            background: #9a9fb3;
         }
         .no-data {
             text-align: center;
@@ -166,13 +272,58 @@
             color: #999;
             font-size: 0.85em;
         }
+        .message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🎵 Music Classification Dashboard</h1>
-            <p class="subtitle">Vocal vs Instrumental Classification Results</p>
+            <p class="subtitle">Rock vs Hiphop Classification Results</p>
+        </div>
+
+        <!-- Action Section -->
+        <div class="action-section">
+            <h2>Classify Music</h2>
+            <div class="message" id="message"></div>
+            <div class="action-buttons">
+                <button id="recordBtn" class="btn btn-primary">
+                    <span>🎤</span>
+                    <span id="recordBtnText">Record Audio</span>
+                </button>
+                <button id="stopBtn" class="btn btn-danger" disabled>
+                    <span>⏹</span>
+                    Stop Recording
+                </button>
+                <div class="file-input-wrapper">
+                    <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+                        <span>📁</span>
+                        Upload Audio File
+                    </button>
+                    <input type="file" id="fileInput" accept="audio/*" style="display: none;">
+                </div>
+            </div>
+            <div class="recording-indicator" id="recordingIndicator">
+                <div class="pulse"></div>
+                <span>Recording... Speak or play music now</span>
+            </div>
         </div>
 
         <!-- Statistics Cards -->
@@ -181,13 +332,13 @@
                 <div class="stat-number">{{ stats.total }}</div>
                 <div class="stat-label">Total Songs</div>
             </div>
-            <div class="stat-card vocal">
-                <div class="stat-number">{{ stats.vocal }}</div>
-                <div class="stat-label">Vocal</div>
+            <div class="stat-card rock">
+                <div class="stat-number">{{ stats.rock }}</div>
+                <div class="stat-label">Rock</div>
             </div>
-            <div class="stat-card instrumental">
-                <div class="stat-number">{{ stats.instrumental }}</div>
-                <div class="stat-label">Instrumental</div>
+            <div class="stat-card hiphop">
+                <div class="stat-number">{{ stats.hiphop }}</div>
+                <div class="stat-label">Hiphop</div>
             </div>
         </div>
 
@@ -197,31 +348,37 @@
             
             {% if results %}
                 {% for result in results %}
-                <div class="result-item {{ result.classification }}">
+                <div class="result-item {{ result.classification or 'pending' }}">
                     <div class="result-header">
                         <div class="result-filename">
                             {{ result.filename or result.get('filepath', 'Unknown') }}
                         </div>
-                        <span class="result-classification {{ result.classification }}">
-                            {{ 'Vocal' if result.classification == 'vocal' else 'Instrumental' }}
+                        <span class="result-classification {{ result.classification or 'pending' }}">
+                            {% if result.classification == 'rock' %}
+                                Rock
+                            {% elif result.classification == 'hiphop' %}
+                                Hiphop
+                            {% else %}
+                                Pending
+                            {% endif %}
                         </span>
                     </div>
                     
                     <div class="result-details">
+                        {% if result.confidence and result.confidence > 0 %}
                         <span>Confidence: {{ "%.1f"|format(result.confidence * 100) }}%</span>
+                        {% endif %}
                         {% if result.timestamp %}
                         <span class="timestamp">
-                            {% if result.timestamp %}
-                                {{ result.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
-                            {% endif %}
+                            {{ result.timestamp.strftime('%Y-%m-%d %H:%M:%S') if result.timestamp else '' }}
                         </span>
                         {% endif %}
                     </div>
                     
-                    {% if result.confidence %}
+                    {% if result.confidence and result.confidence > 0 %}
                     {% set confidence_pct = result.confidence * 100 %}
                     <div class="confidence-bar">
-                        <div class="confidence-fill {{ result.classification }}" style="--confidence-width: {{ confidence_pct }}%"></div>
+                        <div class="confidence-fill {{ result.classification or 'rock' }}" style="--confidence-width: {{ confidence_pct }}%"></div>
                     </div>
                     {% endif %}
                 </div>
@@ -230,10 +387,116 @@
                 <div class="no-data">
                     <div class="no-data-icon">🎼</div>
                     <p>No classification results yet.</p>
-                    <p style="margin-top: 10px; font-size: 0.9em;">Waiting for ML client to process music files...</p>
+                    <p style="margin-top: 10px; font-size: 0.9em;">Record audio or upload a file to get started!</p>
                 </div>
             {% endif %}
         </div>
     </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const recordBtnText = document.getElementById('recordBtnText');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const fileInput = document.getElementById('fileInput');
+        const messageDiv = document.getElementById('message');
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            setTimeout(() => {
+                messageDiv.className = 'message';
+            }, 5000);
+        }
+
+        recordBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    await uploadAudio(audioBlob, 'recording.wav');
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.disabled = true;
+                stopBtn.disabled = false;
+                recordingIndicator.classList.add('active');
+                recordBtnText.textContent = 'Recording...';
+            } catch (error) {
+                showMessage('Error accessing microphone: ' + error.message, 'error');
+                console.error('Error accessing microphone:', error);
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.disabled = false;
+                stopBtn.disabled = true;
+                recordingIndicator.classList.remove('active');
+                recordBtnText.textContent = 'Record Audio';
+            }
+        });
+
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                await uploadAudio(file, file.name);
+            }
+        });
+
+        async function uploadAudio(audioBlob, filename) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, filename);
+
+            try {
+                showMessage('Uploading audio...', 'success');
+                const endpoint = filename === 'recording.wav' ? '/api/record-audio' : '/api/upload-audio';
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message || 'Audio uploaded successfully! Classification in progress...', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showMessage(data.error || 'Error uploading audio', 'error');
+                }
+            } catch (error) {
+                showMessage('Error uploading audio: ' + error.message, 'error');
+                console.error('Error uploading audio:', error);
+            }
+        }
+
+        // Auto-refresh results every 5 seconds
+        setInterval(() => {
+            fetch('/api/results')
+                .then(response => response.json())
+                .then(data => {
+                    // Check if there are new results
+                    // You could update the UI here without full page reload
+                })
+                .catch(error => console.error('Error fetching results:', error));
+        }, 5000);
+    </script>
 </body>
 </html>

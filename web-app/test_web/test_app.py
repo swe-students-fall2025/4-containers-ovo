@@ -12,15 +12,15 @@ def test_index_page_with_results(client):
     # Basic UI elements
     assert "Music Classification Dashboard" in html
     assert "Total Songs" in html
-    assert "Vocal" in html
-    assert "Instrumental" in html
+    assert "Rock" in html
+    assert "Hiphop" in html
 
     # Sample data content
-    assert "song_vocal.mp3" in html
-    assert "song_instr.mp3" in html
+    assert "song_rock.mp3" in html
+    assert "song_hiphop.mp3" in html
 
-    assert "Vocal" in html
-    assert "Instrumental" in html
+    assert "Rock" in html
+    assert "Hiphop" in html
 
 
 def test_index_page_no_results(monkeypatch):
@@ -83,17 +83,33 @@ def test_api_stats(client):
 
     data = resp.get_json()
     total = data["total"]
-    vocal = data["vocal"]
-    instrumental = data["instrumental"]
+    rock = data["rock"]
+    hiphop = data["hiphop"]
 
-    # Total = vocal + instrumental
-    assert total == vocal + instrumental
+    # Total = rock + hiphop
+    assert total == rock + hiphop
 
     if total > 0:
-        expected_vocal_pct = round(vocal / total * 100, 2)
-        expected_instr_pct = round(instrumental / total * 100, 2)
-        assert data["vocal_percentage"] == expected_vocal_pct
-        assert data["instrumental_percentage"] == expected_instr_pct
+        expected_rock_pct = round(rock / total * 100, 2)
+        expected_hiphop_pct = round(hiphop / total * 100, 2)
+        assert data["rock_percentage"] == expected_rock_pct
+        assert data["hiphop_percentage"] == expected_hiphop_pct
     else:
-        assert data["vocal_percentage"] == 0
-        assert data["instrumental_percentage"] == 0
+        assert data["rock_percentage"] == 0
+        assert data["hiphop_percentage"] == 0
+
+
+def test_upload_audio_missing_file(client):
+    """Test /api/upload-audio without file returns 400."""
+    resp = client.post("/api/upload-audio")
+    assert resp.status_code == 400
+    data = resp.get_json()
+    assert "error" in data
+
+
+def test_record_audio_missing_file(client):
+    """Test /api/record-audio without file returns 400."""
+    resp = client.post("/api/record-audio")
+    assert resp.status_code == 400
+    data = resp.get_json()
+    assert "error" in data
