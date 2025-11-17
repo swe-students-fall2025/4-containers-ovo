@@ -102,9 +102,7 @@ def api_stats():
             "rock": rock,
             "hiphop": hiphop,
             "rock_percentage": round(rock / total * 100, 2) if total > 0 else 0,
-            "hiphop_percentage": (
-                round(hiphop / total * 100, 2) if total > 0 else 0
-            ),
+            "hiphop_percentage": (round(hiphop / total * 100, 2) if total > 0 else 0),
         }
     )
 
@@ -155,13 +153,16 @@ def record_audio():
         }
         db.classifications.insert_one(classification)
 
-        return jsonify(
-            {
-                "success": True,
-                "task_id": str(task_id),
-                "message": "Audio uploaded and classification task created",
-            }
-        ), 201
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "task_id": str(task_id),
+                    "message": "Audio uploaded and classification task created",
+                }
+            ),
+            201,
+        )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -213,13 +214,16 @@ def upload_audio():
         }
         db.classifications.insert_one(classification)
 
-        return jsonify(
-            {
-                "success": True,
-                "task_id": str(task_id),
-                "message": "Audio uploaded and classification task created",
-            }
-        ), 201
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "task_id": str(task_id),
+                    "message": "Audio uploaded and classification task created",
+                }
+            ),
+            201,
+        )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -227,5 +231,6 @@ def upload_audio():
 
 if __name__ == "__main__":
     import os
+
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
