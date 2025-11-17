@@ -1,0 +1,7 @@
+[MASTER]
+# Disable import-error warnings globally (packages are available at runtime)
+disable=import-error
+
+[DESIGN]
+# Allow slightly more local variables for data processing
+max-locals=20
