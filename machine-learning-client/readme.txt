@@ -1,26 +1,17 @@
-![Lint-free](https://github.com/nyu-software-engineering/containerized-app-exercise/actions/workflows/lint.yml/badge.svg)
+Machine Learning client container
+=================================
 
+Build the worker image (from the repository root):
 
-## 🎵 OvO - Project Overview
+    docker build -t ml-client -f machine-learning-client/Dockerfile machine-learning-client
 
-This project allows users to upload an audio file and automatically receive a genre prediction: “rock” or “hiphop.”
+Run it against your MongoDB instance (replace the URI if needed):
 
+    docker run --rm --env MONGO_URI="mongodb://mongodb:27017/ml_audio" ml-client
 
-## Team Members
-
-Yilin Wu	   https://github.com/YilinWu1028
-
-Lily Luo	   https://github.com/lilyluo7412
-
-Jingyao Fu	   https://github.com/Sophiaaa430
-
-Mojin Yuan	   https://github.com/Mojin-Yuan
-
-Christine Jin  https://github.com/Christine-Jin
-
-
-## How to Configure and Run the Entire Project (Any Platform)
-
-## Environment Variables and Starter Data Setup
-
-## Secret Configuration Files (.env) Requirements
+The container executes `python -m app.worker`, which continuously polls the
+`tasks` collection, processes audio from GridFS, and writes results back to
+MongoDB. The trained model and scaler artefacts in `data/fma_metadata/` are
+copied into the image so no extra volume mounts are required unless you want to
+override them. Use the `MONGO_URI` environment variable to point at an external
+MongoDB deployment or another container on the same Docker network.
