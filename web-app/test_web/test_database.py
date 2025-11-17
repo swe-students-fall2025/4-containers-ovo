@@ -26,7 +26,7 @@ class FakeMongoClient:
 def test_get_database_singleton(monkeypatch):
     """get_database() should return the same DB instance on repeated calls."""
     fake_client = FakeMongoClient("mongodb://example")
-    monkeypatch.setattr(database, "MongoClient", lambda uri: fake_client)
+    monkeypatch.setattr(database, "MongoClient", lambda *args, **kwargs: fake_client)
 
     # Ensure clean state
     database.close_database()
@@ -41,7 +41,7 @@ def test_get_database_singleton(monkeypatch):
 def test_close_database_resets_client(monkeypatch):
     """close_database() should close the client and allow creation of a new one."""
     fake_client = FakeMongoClient("mongodb://example")
-    monkeypatch.setattr(database, "MongoClient", lambda uri: fake_client)
+    monkeypatch.setattr(database, "MongoClient", lambda *args, **kwargs: fake_client)
 
     database.close_database()
     db1 = database.get_database()
@@ -53,7 +53,7 @@ def test_close_database_resets_client(monkeypatch):
 
     # Next call should use a new client
     fake_client2 = FakeMongoClient("mongodb://example2")
-    monkeypatch.setattr(database, "MongoClient", lambda uri: fake_client2)
+    monkeypatch.setattr(database, "MongoClient", lambda *args, **kwargs: fake_client2)
     db2 = database.get_database()
 
     assert db1 is not db2

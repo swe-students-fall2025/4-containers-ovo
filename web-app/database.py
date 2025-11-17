@@ -9,6 +9,26 @@ _client = None
 _db = None
 
 
+def get_client():
+    """
+    Get or create MongoDB client.
+
+    Returns:
+        MongoClient: MongoDB client instance
+    """
+    global _client
+
+    if _client is None:
+        # Set shorter timeout for faster failure when MongoDB is not available
+        _client = MongoClient(
+            Config.MONGO_URI,
+            serverSelectionTimeoutMS=2000,  # 2 seconds timeout
+            connectTimeoutMS=2000,
+        )
+
+    return _client
+
+
 def get_database():
     """
     Get or create database connection.
@@ -19,7 +39,7 @@ def get_database():
     global _client, _db
 
     if _db is None:
-        _client = MongoClient(Config.MONGO_URI)
+        _client = get_client()
         _db = _client[Config.MONGO_DB_NAME]
 
     return _db

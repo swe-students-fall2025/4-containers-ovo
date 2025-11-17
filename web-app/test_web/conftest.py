@@ -59,15 +59,15 @@ def sample_docs():
     return [
         {
             "_id": "1",
-            "filename": "song_vocal.mp3",
-            "classification": "vocal",
+            "filename": "song_rock.mp3",
+            "classification": "rock",
             "confidence": 0.9,
             "timestamp": datetime(2025, 1, 1, 12, 0, 0),
         },
         {
             "_id": "2",
-            "filename": "song_instr.mp3",
-            "classification": "instrumental",
+            "filename": "song_hiphop.mp3",
+            "classification": "hiphop",
             "confidence": 0.8,
             "timestamp": datetime(2025, 1, 1, 13, 0, 0),
         },
