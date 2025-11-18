@@ -1,31 +1,45 @@
-# name: ML Client Tests
+name: Machine Learning Client CI
 
-# on:
-#   push:
-#     paths:
-#       - "machine-learning-client/**"
-#   pull_request:
-#     paths:
-#       - "machine-learning-client/**"
+on:
+  push:
+    paths:
+      - "machine-learning-client/**"
+  pull_request:
+    paths:
+      - "machine-learning-client/**"
 
-# jobs:
-#   test-ml-client:
-#     runs-on: ubuntu-latest
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - uses: actions/checkout@v4
+    defaults:
+      run:
+        working-directory: machine-learning-client
 
-#       - uses: actions/setup-python@v4
-#         with:
-#           python-version: "3.10"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#       - name: Install dependencies
-#         working-directory: machine-learning-client
-#         run: |
-#           pip install pytest pytest-cov
-#           pip install numpy scipy librosa soundfile pymongo joblib
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-#       - name: Run pytest
-#         working-directory: machine-learning-client
-#         run: |
-#           pytest --cov=app --cov-report=term-missing
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pylint black
+
+      - name: Lint with pylint
+        run: |
+          pylint app tests
+
+      - name: Format check with black
+        run: |
+          black --check .
+
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=app --cov-report=xml --cov-report=term-missing
+
