@@ -158,10 +158,15 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
             {"$set": {"status": "done", "predicted_genre": predicted_genre}},
         )
 
-        logger.info("Processed task %s file %s => %s", task_doc.get("_id"), task_doc.get("filename"), predicted_genre)
+        logger.info(
+            "Processed task %s file %s => %s",
+            task_doc.get("_id"),
+            task_doc.get("filename"),
+            predicted_genre,
+        )
         return True
 
-    except Exception as exc:  # pragma: no cover - top-level task error handler
+    except Exception as exc:  # pragma: no cover - top-level task error handler  # pylint: disable=broad-except
         tasks_collection.update_one(
             {"_id": task_doc["_id"]},
             {"$set": {"status": "error", "error_message": str(exc)}},
