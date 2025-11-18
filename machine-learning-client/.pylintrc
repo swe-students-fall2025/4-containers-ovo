@@ -1,7 +1,41 @@
 [MASTER]
-# Disable import-error warnings globally (packages are available at runtime)
-disable=import-error
+ignore=tests
+jobs=1
+extension-pkg-whitelist=
+load-plugins=
+persistent=no
 
-[DESIGN]
-# Allow slightly more local variables for data processing
-max-locals=20
+[MESSAGES CONTROL]
+disable=
+    C0114,  # missing-module-docstring
+    C0115,  # missing-class-docstring
+    C0116,  # missing-function-docstring
+    C0103,  # invalid-name (tests often use short var names)
+    C0305,  # trailing-newlines
+    R0903,  # too-few-public-methods (common in tests)
+    W0613,  # unused-argument (tests use *args to mock)
+    W0621,  # redefined-outer-name (fixture shadowing)
+    W0611,  # unused-import in tests
+    W0703,  # broad-except allowed for worker safety
+    W0108,  # unnecessary-lambda (common in tests)
+    C0321,  # multiple statements
+    E0611,  # no-name-in-module (false positives during pytest)
+    C0411,  # wrong-import-order (tests often mock order)
+    R1720,  # no-else-raise
+    R0913,  # too-many-arguments
+    R0914,  # too-many-locals
+    R0912,  # too-many-branches
+    R0915,  # too-many-statements
+    R0911,  # too-many-return-statements
+    R1702,  # too-many-nested-blocks
+
+[FORMAT]
+max-line-length=120
+indent-string='    '
+
+[TYPECHECK]
+ignored-modules=soundfile,numpy,joblib,pymongo
+ignored-classes=GridFS
+
+[REPORTS]
+score=yes
