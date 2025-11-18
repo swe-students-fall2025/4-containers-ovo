@@ -22,6 +22,7 @@ from threading import Event
 
 import numpy as np
 from gridfs import GridFS
+from gridfs.errors import NoFile
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, AutoReconnect, ServerSelectionTimeoutError
 import joblib
@@ -171,8 +172,13 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
         return True
 
     except (
-        Exception
-    ) as exc:  # pragma: no cover - top-level task error handler  # pylint: disable=broad-except
+        PyMongoError,
+        NoFile,
+        OSError,
+        ValueError,
+        TypeError,
+        RuntimeError,
+    ) as exc:  # pragma: no cover - top-level task error handler
         tasks_collection.update_one(
             {"_id": task_doc["_id"]},
             {"$set": {"status": "error", "error_message": str(exc)}},
@@ -259,7 +265,7 @@ def main() -> None:
             backoff_seconds = min(backoff_seconds * 2.0, 10.0)
             client = None
             continue
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.exception("Unhandled error in main loop: %s", exc)
             time.sleep(min(backoff_seconds, 5.0))
             backoff_seconds = min(backoff_seconds * 2.0, 10.0)
