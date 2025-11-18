@@ -22,11 +22,6 @@ jobs:
           python -m pip install pipenv
           pipenv sync --dev --python $(which python)
           pipenv shell --fancy --python $(which python)
-      - name: Install tomli for pylint (runtime only)
-        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
-        run: |
-          cd ${{ matrix.subdir }}
-          pipenv run pip install tomli typing_extensions
       - name: Lint with pylint
         if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
         # you may set pylint to ignore any files or dependencies that make no sense to lint
