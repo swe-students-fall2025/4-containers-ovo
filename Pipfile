@@ -6,10 +6,10 @@ name = "pypi"
 [packages]
 
 [dev-packages]
-ipykernel = "*"
 matplotlib = "*"
 seaborn = "*"
 pandas = "*"
+ipykernel = "*"
 
 [requires]
 python_version = "3.12"
