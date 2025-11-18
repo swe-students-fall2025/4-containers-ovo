@@ -1,0 +1,31 @@
+name: ML Client Tests
+
+on:
+  push:
+    paths:
+      - "machine-learning-client/**"
+  pull_request:
+    paths:
+      - "machine-learning-client/**"
+
+jobs:
+  test-ml-client:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        working-directory: machine-learning-client
+        run: |
+          pip install pytest pytest-cov
+          pip install numpy scipy librosa soundfile pymongo gridfs joblib
+
+      - name: Run pytest
+        working-directory: machine-learning-client
+        run: |
+          pytest --cov=app --cov-report=term-missing
