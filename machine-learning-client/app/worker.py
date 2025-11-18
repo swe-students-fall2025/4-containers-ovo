@@ -57,16 +57,21 @@ def ensure_model_loaded(initial_backoff: float = 1.0) -> None:
     This keeps the worker alive if the model files are not yet present
     (for example when the image is built but data files are mounted later).
     """
-    global model, label_encoder
     backoff = initial_backoff
-    while model is None or label_encoder is None:
+    while True:
         try:
-            model = joblib.load(MODEL_PATH)
-            label_encoder = joblib.load(LABEL_ENCODER_PATH)
-            logger.info("Loaded model from %s and label encoder from %s", MODEL_PATH, LABEL_ENCODER_PATH)
-            return
-        except Exception as exc:  # pragma: no cover - runtime retry behavior
-            logger.warning("Model files not available yet: %s. Retrying in %.1fs", exc, backoff)
+            loaded_model = joblib.load(MODEL_PATH)
+            loaded_label_encoder = joblib.load(LABEL_ENCODER_PATH)
+            logger.info(
+                "Loaded model and label encoder",
+            )
+            return loaded_model, loaded_label_encoder
+        except (FileNotFoundError, OSError, EOFError) as exc:  # pragma: no cover - retry behavior
+            logger.warning(
+                "Model files not available yet (%s). Retrying in %.1fs",
+                exc,
+                backoff,
+            )
             time.sleep(backoff)
             backoff = min(backoff * 2.0, 30.0)
 
@@ -102,7 +107,7 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
         task_doc = tasks_collection.find_one_and_update(
             {"status": "pending"}, {"$set": {"status": "processing"}}
         )
-    except (PyMongoError, Exception) as exc:  # pylint: disable=broad-except
+    except PyMongoError as exc:
         logger.warning("DB error while fetching task: %s", exc)
         return False
 
@@ -124,14 +129,14 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
             idx = int(np.argmax(proba))
             predicted_label = model.classes_[idx]
             confidence = float(proba[idx])
-        except Exception:
+        except (AttributeError, ValueError, IndexError):
             predicted_label = model.predict(feature_vector)[0]
             confidence = 1.0
 
         # Map predicted_label to human-readable class using label_encoder if available
         try:
             predicted_genre = label_encoder.inverse_transform([predicted_label])[0]
-        except Exception:
+        except (AttributeError, ValueError):
             # If inverse transform fails, fall back to string form
             predicted_genre = predicted_label
 
@@ -156,12 +161,16 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
         logger.info("Processed task %s file %s => %s", task_doc.get("_id"), task_doc.get("filename"), predicted_genre)
         return True
 
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # pragma: no cover - top-level task error handler
         tasks_collection.update_one(
             {"_id": task_doc["_id"]},
             {"$set": {"status": "error", "error_message": str(exc)}},
         )
-        logger.exception("Failed processing task %s file %s", task_doc.get("_id"), task_doc.get("filename"))
+        logger.exception(
+            "Failed processing task %s file %s",
+            task_doc.get("_id"),
+            task_doc.get("filename"),
+        )
         return False
 
 
@@ -223,7 +232,9 @@ def main() -> None:
                 gridfs_bucket = GridFS(database)
                 logger.info("Connected to MongoDB")
                 # Ensure model/scaler are loaded (this will retry until available)
-                ensure_model_loaded()
+                m, le = ensure_model_loaded()
+                # Assign to module-level variables without using the `global` keyword
+                globals().update({"model": m, "label_encoder": le})
                 backoff_seconds = 1.0
 
             # Run the processing loop; it returns only on stop_event
