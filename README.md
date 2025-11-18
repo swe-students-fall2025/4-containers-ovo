@@ -1,6 +1,6 @@
 ![Lint](https://github.com/nyu-software-engineering/containerized-app-exercise/actions/workflows/lint.yml/badge.svg)
 ![ML Client Tests](https://github.com/swe-students-fall2025/4-containers-ovo/actions/workflows/ml-app.yml/badge.svg)
-[![Web App CI](https://github.com/swe-students-fall2025/4-containers-ovo/actions/workflows/web-app.yml/badge.svg)
+![Web App CI](https://github.com/swe-students-fall2025/4-containers-ovo/actions/workflows/web-app.yml/badge.svg)
 
 
 ## 🎵 OvO - Music Genre Classification System
