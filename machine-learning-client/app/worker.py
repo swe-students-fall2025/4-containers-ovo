@@ -170,7 +170,9 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
         )
         return True
 
-    except Exception as exc:  # pragma: no cover - top-level task error handler  # pylint: disable=broad-except
+    except (
+        Exception
+    ) as exc:  # pragma: no cover - top-level task error handler  # pylint: disable=broad-except
         tasks_collection.update_one(
             {"_id": task_doc["_id"]},
             {"$set": {"status": "error", "error_message": str(exc)}},
