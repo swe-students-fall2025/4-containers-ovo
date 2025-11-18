@@ -66,7 +66,11 @@ def ensure_model_loaded(initial_backoff: float = 1.0) -> None:
                 "Loaded model and label encoder",
             )
             return loaded_model, loaded_label_encoder
-        except (FileNotFoundError, OSError, EOFError) as exc:  # pragma: no cover - retry behavior
+        except (
+            FileNotFoundError,
+            OSError,
+            EOFError,
+        ) as exc:  # pragma: no cover - retry behavior
             logger.warning(
                 "Model files not available yet (%s). Retrying in %.1fs",
                 exc,
@@ -166,7 +170,9 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
         )
         return True
 
-    except Exception as exc:  # pragma: no cover - top-level task error handler  # pylint: disable=broad-except
+    except (
+        Exception
+    ) as exc:  # pragma: no cover - top-level task error handler  # pylint: disable=broad-except
         tasks_collection.update_one(
             {"_id": task_doc["_id"]},
             {"$set": {"status": "error", "error_message": str(exc)}},
