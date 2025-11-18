@@ -16,6 +16,27 @@ services:
     ports: ["27017:27017"]
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  ml-client:
+    build:
+      context: ./machine-learning-client
+    image: ovo-ml-client:dev
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/ovo
+      - MONGO_DB_NAME=ml_system
+    volumes:
+      - ./machine-learning-client:/app
+      - ./machine-learning-client/data:/app/data
+    # The machine-learning client Dockerfile already runs the worker by default
+    # so no explicit command is required here. Adjust if you need a different entry.
 
 volumes:
   mongo-data:

@@ -14,6 +14,7 @@ Responsibilities:
 
 import os
 import time
+from datetime import datetime
 import signal
 import logging
 from typing import Tuple, Any, Optional
@@ -21,6 +22,7 @@ from threading import Event
 
 import numpy as np
 from gridfs import GridFS
+from gridfs.errors import NoFile
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, AutoReconnect, ServerSelectionTimeoutError
 import joblib
@@ -35,17 +37,48 @@ except ImportError:  # pragma: no cover
 
 # Load trained model + scaler at module import time
 MODEL_PATH = "/app/data/model_rock_hiphop.joblib"
-SCALER_PATH = "/app/data/label_encoder.joblib"
+LABEL_ENCODER_PATH = "/app/data/label_encoder.joblib"
 
-model = joblib.load(MODEL_PATH)
-scaler = joblib.load(SCALER_PATH)
+# Model and label encoder will be loaded lazily with retry so the container
+# doesn't exit if the files are not present at container start.
+model = None
+label_encoder = None
 
-# Configure logging
+# Configure logging early so we can log model-load attempts
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"),
     format="%(asctime)s %(levelname)s %(message)s",
 )
 logger = logging.getLogger("ml-worker")
+
+
+def ensure_model_loaded(initial_backoff: float = 1.0) -> None:
+    """Attempt to load model and scaler, retrying with exponential backoff.
+
+    This keeps the worker alive if the model files are not yet present
+    (for example when the image is built but data files are mounted later).
+    """
+    backoff = initial_backoff
+    while True:
+        try:
+            loaded_model = joblib.load(MODEL_PATH)
+            loaded_label_encoder = joblib.load(LABEL_ENCODER_PATH)
+            logger.info(
+                "Loaded model and label encoder",
+            )
+            return loaded_model, loaded_label_encoder
+        except (
+            FileNotFoundError,
+            OSError,
+            EOFError,
+        ) as exc:  # pragma: no cover - retry behavior
+            logger.warning(
+                "Model files not available yet (%s). Retrying in %.1fs",
+                exc,
+                backoff,
+            )
+            time.sleep(backoff)
+            backoff = min(backoff * 2.0, 30.0)
 
 
 def _read_gridfs_audio(gridfs_bucket: GridFS, gridfs_id: Any) -> Tuple[np.ndarray, int]:
@@ -71,58 +104,90 @@ def process_one(db, gridfs_bucket: GridFS) -> bool:
     Transitions to "processing" atomically, runs inference, writes results.
     Returns True if a task was processed, False if none or on transient DB error.
     """
-    files_collection = db["fs.files"]
+    # Tasks are created by the web app in the `tasks` collection and reference
+    # a GridFS id in `gridfs_id`. Read from `tasks` for pending work.
+    tasks_collection = db["tasks"]
 
     try:
-        task_file = files_collection.find_one_and_update(
-            {"status": "pending"},
-            {"$set": {"status": "processing"}},
+        task_doc = tasks_collection.find_one_and_update(
+            {"status": "pending"}, {"$set": {"status": "processing"}}
         )
-    except (PyMongoError, Exception) as exc:  # pylint: disable=broad-except
+    except PyMongoError as exc:
         logger.warning("DB error while fetching task: %s", exc)
         return False
 
-    if task_file is None:
+    if task_doc is None:
         return False
 
     try:
-        # GridFS read audio
-        audio, sample_rate = _read_gridfs_audio(gridfs_bucket, task_file["_id"])
+        # GridFS read audio by the stored gridfs id
+        gridfs_id = task_doc.get("gridfs_id")
+        audio, sample_rate = _read_gridfs_audio(gridfs_bucket, gridfs_id)
 
         # extract vector
         feature_vector = extract_features_audio(audio, sample_rate).reshape(1, -1)
 
-        # normalize
-        feature_vector_scaled = scaler.transform(feature_vector)
+        # Use the saved pipeline directly (it includes any scaler);
+        # the saved label encoder (if present) maps numeric labels back to strings.
+        try:
+            proba = model.predict_proba(feature_vector)[0]
+            idx = int(np.argmax(proba))
+            predicted_label = model.classes_[idx]
+            confidence = float(proba[idx])
+        except (AttributeError, ValueError, IndexError):
+            predicted_label = model.predict(feature_vector)[0]
+            confidence = 1.0
 
-        # model predict
-        predicted_genre = model.predict(feature_vector_scaled)[0]
+        # Map predicted_label to human-readable class using label_encoder if available
+        try:
+            predicted_genre = label_encoder.inverse_transform([predicted_label])[0]
+        except (AttributeError, ValueError):
+            # If inverse transform fails, fall back to string form
+            predicted_genre = predicted_label
 
-        # result update
-        db.results.insert_one(
+        # Update the classifications collection (web app created an initial entry)
+        db.classifications.update_one(
+            {"task_id": str(task_doc.get("_id"))},
             {
-                "gridfs_id": task_file["_id"],
-                "filename": task_file.get("filename"),
-                "predicted_genre": predicted_genre,
-                "created_at": time.time(),
-            }
+                "$set": {
+                    "classification": predicted_genre,
+                    "confidence": confidence,
+                    "timestamp": datetime.utcnow(),
+                }
+            },
         )
 
-        files_collection.update_one(
-            {"_id": task_file["_id"]},
+        # Mark task done
+        tasks_collection.update_one(
+            {"_id": task_doc["_id"]},
             {"$set": {"status": "done", "predicted_genre": predicted_genre}},
         )
+
         logger.info(
-            "Processed file %s => %s", task_file.get("filename"), predicted_genre
+            "Processed task %s file %s => %s",
+            task_doc.get("_id"),
+            task_doc.get("filename"),
+            predicted_genre,
         )
         return True
 
-    except Exception as exc:  # pylint: disable=broad-except
-        files_collection.update_one(
-            {"_id": task_file["_id"]},
+    except (
+        PyMongoError,
+        NoFile,
+        OSError,
+        ValueError,
+        TypeError,
+        RuntimeError,
+    ) as exc:  # pragma: no cover - top-level task error handler
+        tasks_collection.update_one(
+            {"_id": task_doc["_id"]},
             {"$set": {"status": "error", "error_message": str(exc)}},
         )
-        logger.exception("Failed processing file %s", task_file.get("filename"))
+        logger.exception(
+            "Failed processing task %s file %s",
+            task_doc.get("_id"),
+            task_doc.get("filename"),
+        )
         return False
 
 
@@ -183,6 +248,10 @@ def main() -> None:
                 database = client[mongo_db_name]
                 gridfs_bucket = GridFS(database)
                 logger.info("Connected to MongoDB")
+                # Ensure model/scaler are loaded (this will retry until available)
+                m, le = ensure_model_loaded()
+                # Assign to module-level variables without using the `global` keyword
+                globals().update({"model": m, "label_encoder": le})
                 backoff_seconds = 1.0
 
             # Run the processing loop; it returns only on stop_event
@@ -196,7 +265,7 @@ def main() -> None:
             backoff_seconds = min(backoff_seconds * 2.0, 10.0)
             client = None
             continue
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.exception("Unhandled error in main loop: %s", exc)
             time.sleep(min(backoff_seconds, 5.0))
             backoff_seconds = min(backoff_seconds * 2.0, 10.0)
