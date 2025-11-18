@@ -5,7 +5,7 @@ Build the worker image (from the repository root):
 
     docker build -t ml-client -f machine-learning-client/Dockerfile machine-learning-client
 
-Run it against your MongoDB instance (replace the URI if needed):
+run it against your MongoDB instance (replace the URI if needed):
 
     docker run --rm --env MONGO_URI="mongodb://mongodb:27017/ml_audio" ml-client
 
