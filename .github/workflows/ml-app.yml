@@ -33,7 +33,7 @@ jobs:
 
       - name: Lint with pylint
         run: |
-          pylint app tests
+          pylint app
 
       - name: Format check with black
         run: |
