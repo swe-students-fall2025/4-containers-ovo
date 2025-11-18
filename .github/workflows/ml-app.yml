@@ -23,7 +23,7 @@ jobs:
         working-directory: machine-learning-client
         run: |
           pip install pytest pytest-cov
-          pip install numpy scipy librosa soundfile pymongo gridfs joblib
+          pip install numpy scipy librosa soundfile pymongo joblib
 
       - name: Run pytest
         working-directory: machine-learning-client
