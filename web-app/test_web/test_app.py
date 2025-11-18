@@ -1,6 +1,8 @@
 # tests/test_app.py
 # pylint: disable=import-error
 
+from io import BytesIO
+
 
 def test_index_page_with_results(client):
     """The index page should render correctly and display classifications when data exists."""
@@ -76,6 +78,24 @@ def test_api_results(client):
     assert "timestamp" in first
 
 
+def test_api_results_timestamp_format(client):
+    """Test that /api/results converts datetime timestamps into ISO strings."""
+    resp = client.get("/api/results")
+    assert resp.status_code == 200
+
+    data = resp.get_json()
+    assert "results" in data
+    assert len(data["results"]) > 0
+
+    first = data["results"][0]
+    ts = first.get("timestamp")
+
+    # timestamp must be a string in ISO 8601 format
+    assert isinstance(ts, str)
+    assert "T" in ts  # ISO timestamps contain 'T'
+    assert ":" in ts
+
+
 def test_api_stats(client):
     """Test /api/stats for correct counting and percentage calculation."""
     resp = client.get("/api/stats")
@@ -105,6 +125,20 @@ def test_upload_audio_missing_file(client):
     assert resp.status_code == 400
     data = resp.get_json()
     assert "error" in data
+
+
+def test_upload_audio_empty_filename(client):
+    """Test /api/upload-audio with empty filename returns 400."""
+    data = {"audio": (BytesIO(b"test"), "")}
+    resp = client.post("/api/upload-audio", data=data)
+    assert resp.status_code == 400
+
+
+def test_upload_audio_invalid_file(client):
+    """Test /api/upload-audio with invalid file extension returns 400."""
+    data = {"audio": (BytesIO(b"test data"), "wrong.txt")}
+    resp = client.post("/api/upload-audio", data=data)
+    assert resp.status_code == 400
 
 
 def test_record_audio_missing_file(client):
