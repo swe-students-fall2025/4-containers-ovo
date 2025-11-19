@@ -6,7 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # repeat same job for each subsystem in the following subdirectories
         subdir: [web-app, machine-learning-client]
     steps:
       - uses: actions/checkout@v4
@@ -29,13 +28,24 @@ jobs:
           pipenv run pip install tomli typing_extensions
       - name: Lint with pylint
         if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
-        # you may set pylint to ignore any files or dependencies that make no sense to lint
         run: |
           cd ${{ matrix.subdir }}
           pipenv run pylint **/*.py
       - name: Format with black
         if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
-        # you may set black to ignore any files or dependencies that make no sense to format
         run: |
           cd ${{ matrix.subdir }}
           pipenv run black --diff --check .
+
+      - name: Exit pipenv shell to avoid CI hang
+        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
+        run: exit 0
+
+      - name: Re-activate pipenv environment for subsequent commands
+        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
+        run: |
+          cd ${{ matrix.subdir }}
+          VENV_PATH=$(pipenv --venv)
+          echo "$VENV_PATH/bin" >> $GITHUB_PATH
+
+
