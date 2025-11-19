@@ -29,7 +29,7 @@ A containerized system that classifies audio files as either "rock" or "hiphop" 
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone <https://github.com/swe-students-fall2025/4-containers-ovo.git>
    cd 4-containers-ovo
    ```
 
