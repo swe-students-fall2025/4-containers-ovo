@@ -265,7 +265,7 @@ def main() -> None:
             backoff_seconds = min(backoff_seconds * 2.0, 10.0)
             client = None
             continue
-        except Exception as exc:  # pylint: disable=broad-exception-caught
+        except Exception as exc:  # pylint: disable=W0703
             logger.exception("Unhandled error in main loop: %s", exc)
             time.sleep(min(backoff_seconds, 5.0))
             backoff_seconds = min(backoff_seconds * 2.0, 10.0)
