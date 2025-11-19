@@ -184,7 +184,7 @@ def test_read_gridfs_audio(monkeypatch):
             return b"FAKE"
 
     class FakeBucket:
-        def get(self, id):
+        def get(self, file_id):
             return FakeFSFile()
 
     class FakeSoundFile:

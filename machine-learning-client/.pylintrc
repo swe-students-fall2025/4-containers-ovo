@@ -19,6 +19,7 @@ disable=
     W0703,  # broad-except allowed for worker safety
     W0108,  # unnecessary-lambda (common in tests)
     C0321,  # multiple statements on one line
+    E0401,  # import-error (pytest not available in lint env)
     E0611,  # no-name-in-module (pytest false positives)
     C0411,  # wrong-import-order (tests often mock order)
     R1720,  # no-else-raise
